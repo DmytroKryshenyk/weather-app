@@ -396,11 +396,11 @@ body {
     padding-bottom: 2rem;
     font-size: 0; }
 
-.forecast__num {
+.forecast__degree-num {
   display: inline-block;
   margin-right: 1rem;
   font: 700 1.5rem "OpenSansCondensed", sans-serif; }
-  .forecast__num--today {
+  .forecast__degree-num--today {
     font: 700 6rem "OpenSansCondensed", sans-serif; }
 
 .forecast__icon--big {
