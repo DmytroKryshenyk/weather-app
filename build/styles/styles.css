@@ -419,6 +419,7 @@ body {
     margin-left: 0; }
 
 .forecast__icon {
+  display: block;
   font-size: 3rem; }
 
 @media (min-width: 992px) {
