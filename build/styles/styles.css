@@ -402,23 +402,26 @@ template {
     box-shadow: 0em -3em 0 0, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em; } }
 
 body {
-  padding: 100px 15px; }
+  padding: 100px 15px;
+  background: url("../images/weather-background.jpg") no-repeat;
+  background-size: cover; }
 
 .container {
   width: 100%;
   min-width: 320px;
   max-width: 1200px;
-  margin: auto;
-  overflow: hidden; }
+  margin: auto; }
 
 .forecast {
   display: flex;
   flex-wrap: wrap;
   color: #ffffff;
-  font-family: "OpenSansCondensed", sans-serif; }
+  font-family: "OpenSansCondensed", sans-serif;
+  border-radius: 1rem;
+  overflow: hidden; }
 
 .forecast__day {
-  background: #323544;
+  background: rgba(50, 53, 68, 0.8);
   flex-grow: 1;
   text-align: center;
   min-height: 14rem;
@@ -426,36 +429,45 @@ body {
   flex-direction: column;
   justify-content: space-between; }
   .forecast__day--today {
-    display: block;
     flex: 1 0 100%; }
   .forecast__day:nth-child(even) {
-    background: #262936; }
+    background: rgba(38, 41, 54, 0.8); }
 
 .forecast__header {
   background: rgba(0, 0, 0, 0.2);
   display: flex;
-  justify-content: space-between;
-  padding: 0.7rem; }
+  justify-content: space-between; }
 
 .forecast__weekday {
   font: 400 1rem "OpenSansCondensed", sans-serif;
   background: rgba(0, 0, 0, 0.2);
   padding: 0.7rem; }
   .forecast__weekday--today {
-    padding: 0;
     background: transparent; }
+
+.forecast__button {
+  padding: 0;
+  margin: 0;
+  border: none;
+  padding: 0.7rem;
+  background: transparent;
+  background: rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+  transition: background 0.2s ease-out; }
+  .forecast__button:hover {
+    background: rgba(255, 255, 255, 0.1); }
+
+.forecast__date {
+  padding: 0.7rem; }
 
 .forecast__content--today {
   padding: 2rem 1rem; }
 
 .forecast__location {
   font: 400 1em "OpenSansCondensed", sans-serif;
-  color: #bfc1c8;
   margin-bottom: 2rem; }
 
 .forecast__degree {
-  color: #ffffff;
-  display: inline-block;
   font: 700 1.5rem "OpenSansCondensed", sans-serif;
   padding-bottom: 0.7rem; }
   .forecast__degree--today {

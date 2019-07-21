@@ -12,8 +12,13 @@ class Forecast {
     this.humidityTodayElement = this.forecastElement.querySelector(".forecast__humidity--today");
     this.windTodayElement = this.forecastElement.querySelector(".forecast__wind--today");
     this.windDirectionTodayElement = this.forecastElement.querySelector(".forecast__wind-direction--today");
+    this.showMoreDaysButton = this.forecastElement.querySelector(".forecast__days-change");
+    this.daysShowNumberElement = this.forecastElement.querySelector(".forecast__days-show-number");
+
     this.maxSecondsWaitingGeoInfo = 7;
     this.nextDaysToShow = 4;
+    this.maxDaysToShow = 7;
+    this.minDaysToShow = 4;
     this.latitude = null;
     this.longitude = null;
     this.API = "https://api.darksky.net/forecast/";
@@ -22,7 +27,7 @@ class Forecast {
     this.APIexclude = "[minutely,hourly]";
     this.APIunits = "auto";
     this.proxyServerSettings = "https://cors-anywhere.herokuapp.com/";
-    this.today = {
+    this.todayData = {
       weekday: null,
       dayNumber: null,
       monthNumber: null,
@@ -34,9 +39,11 @@ class Forecast {
       windDirection: null,
       iconName: null
     };
+    this.responseData = null;
     this.geoOptions = {
       timeout: this.maxSecondsWaitingGeoInfo * 1000
     };
+    this.showMoreDaysHandle = this.showMoreDaysHandle.bind(this);
   }
 
   fetchWeatherData(API) {
@@ -120,7 +127,7 @@ class Forecast {
     const windDirection = this.convertWindDirection(response.data.currently.windBearing);
     const iconName = response.data.currently.icon;
 
-    this.today = {
+    this.todayData = {
       weekday,
       dayNumber,
       monthNumber,
@@ -159,6 +166,7 @@ class Forecast {
 
       const element = document.createElement("div");
       element.classList.add("forecast__day");
+      element.classList.add("forecast__day-next");
 
       const elementWeekday = document.createElement("p");
       elementWeekday.classList.add("forecast__weekday");
@@ -178,6 +186,7 @@ class Forecast {
       return element;
     });
 
+    this.removeElementsByClassName(container, "forecast__day-next");
     container.append(...elementsArr);
   }
 
@@ -191,9 +200,9 @@ class Forecast {
     this.updateAPI();
 
     this.fetchWeatherData(this.API).then(response => {
-      console.log(response);
+      this.responseData = response;
       this.updateTodayData(response);
-      this.updateTodayView(this.today);
+      this.updateTodayView(this.todayData);
       this.removeSpinner(this.forecastElement);
       this.createNextDaysWeatherElements(this.nextDaysToShow, response, this.forecastElement);
     });
@@ -203,6 +212,26 @@ class Forecast {
     container.classList.remove("spinner");
   }
 
+  removeElementsByClassName(containerElement, removeChildClassName) {
+    while (containerElement.querySelectorAll(`.${removeChildClassName}`).length > 0) {
+      const element = containerElement.querySelector(`.${removeChildClassName}`);
+      containerElement.removeChild(element);
+    }
+  }
+
+  showMoreDaysHandle() {
+    this.showMoreDaysButton.classList.toggle("modeDays--active");
+
+    if (this.showMoreDaysButton.classList.contains("modeDays--active")) {
+      this.nextDaysToShow = this.maxDaysToShow;
+      this.daysShowNumberElement.textContent = "7";
+    } else {
+      this.nextDaysToShow = this.minDaysToShow;
+      this.daysShowNumberElement.textContent = "4";
+    }
+    this.createNextDaysWeatherElements(this.nextDaysToShow, this.responseData, this.forecastElement);
+  }
+
   init() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -210,6 +239,7 @@ class Forecast {
         this.onError.bind(this),
         this.geoOptions
       );
+      this.showMoreDaysButton.addEventListener("click", this.showMoreDaysHandle);
     } else {
       alert("Geolocation is not supported for this Browser/OS version yet.");
     }
