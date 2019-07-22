@@ -1,13 +1,12 @@
 @import "./settings-helpers/normalize.scss";
 @import "./settings-helpers/fonts.scss";
 @import "./settings-helpers/variables-mixins.scss";
-@import './settings-helpers/spinner.scss';
+@import "./settings-helpers/spinner.scss";
 
 body {
   padding: 100px 15px;
-  background: url('../images/weather-background.jpg') no-repeat;
+  background: url("../images/weather-background.jpg") no-repeat;
   background-size: cover;
-
 }
 
 .container {
@@ -30,7 +29,7 @@ body {
   background: rgba($brand-color-lighten, 0.8);
   flex-grow: 1;
   text-align: center;
-  min-height: 14rem; 
+  min-height: 14rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -40,7 +39,7 @@ body {
   }
 
   &:nth-child(even) {
-    background:  rgba($brand-color-darken, 0.8);
+    background: rgba($brand-color-darken, 0.8);
   }
 }
 
@@ -99,7 +98,7 @@ body {
 }
 
 .forecast__degree-num {
-  display: inline-block; 
+  display: inline-block;
   margin-right: 1rem;
   font: 700 1.5rem $text-font;
 

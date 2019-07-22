@@ -4,25 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Weather App</title>
+    <title>Local Weather App</title>
     <meta name="author" content="Dmytro Kryshenyk" />
     <meta name="description" content="Dmytro Kryshenyk weather app" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css"/>
   <link href="styles/styles.css" rel="stylesheet"></head>
   <body>
     <article class="forecast container spinner">
       <div class="forecast__day forecast__day--today">
         <header class="forecast__header">
           <p class="forecast__weekday forecast__weekday--today">Weekday</p>
-          <button class="forecast__days-change forecast__button" type="button">Show <span class="forecast__days-show-number">7</span> days forecast</button>
+          <button class="forecast__button forecast__days-change " type="button"> Show <span class="forecast__days-show-number">7</span> days forecast </button>
           <p class="forecast__date forecast__date--today">Date</p>
         </header>
         <div class="forecast__content forecast__content--today">
           <p class="forecast__location">City location</p>
-          <p class="forecast__degree forecast__degree--today"> 
+          <p class="forecast__degree forecast__degree--today">
             <span class="forecast__degree-num forecast__degree-num--today"> 00<i class="wi wi-celsius"></i></span>
             <span class="forecast__icon--big"> <i class="wi wi-forecast-io-cloudy"></i> </span>
           </p>
@@ -39,8 +36,6 @@
           </ul>
         </div>
       </div>
-  
-
     </article>
   <script type="text/javascript" src="js/index.js"></script></body>
 </html>

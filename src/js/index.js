@@ -27,6 +27,7 @@ class Forecast {
     this.APIexclude = "[minutely,hourly]";
     this.APIunits = "auto";
     this.proxyServerSettings = "https://cors-anywhere.herokuapp.com/";
+    this.responseData = null;
     this.todayData = {
       weekday: null,
       dayNumber: null,
@@ -39,16 +40,45 @@ class Forecast {
       windDirection: null,
       iconName: null
     };
-    this.responseData = null;
     this.geoOptions = {
       timeout: this.maxSecondsWaitingGeoInfo * 1000
     };
     this.showMoreDaysHandle = this.showMoreDaysHandle.bind(this);
   }
 
+  init() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        this.onSuccess.bind(this),
+        this.onError.bind(this),
+        this.geoOptions
+      );
+      this.showMoreDaysButton.addEventListener("click", this.showMoreDaysHandle);
+    } else {
+      alert("Geolocation is not supported for this Browser/OS version yet.");
+    }
+  }
+
+  onSuccess(position) {
+    this.latitude = position.coords.latitude;
+    this.longitude = position.coords.longitude;
+    this.updateAPI();
+
+    this.fetchWeatherData(this.API).then(response => {
+      this.responseData = response;
+      this.updateTodayData(response);
+      this.updateTodayView(this.todayData);
+      this.removeSpinner(this.forecastElement);
+      this.createNextDaysWeatherElements(this.nextDaysToShow, response, this.forecastElement);
+    });
+  }
+
+  onError(error) {
+    alert(`Ошибка при определении положения: ${error.message}`);
+  }
+
   fetchWeatherData(API) {
-    return axios
-      .get(API)
+    return axios.get(API)
       .then(function(response) {
         return response;
       })
@@ -57,10 +87,104 @@ class Forecast {
       });
   }
 
+  updateTodayData(response) {
+    const dateInMilliseconds = response.data.currently.time * 1000;
+    const date = new Date(dateInMilliseconds);
+
+    const weekday = this.getStringWeekday(date);
+    const dayNumber = this.getDayNumber(date);
+    const monthNumber = this.getMonthNumber(date);
+    const yearNumber = date.getFullYear();
+    const location = response.data.timezone;
+    const temperature = Math.round(response.data.currently.temperature);
+    const humidity = Math.round(response.data.currently.humidity * 100);
+    const windSpeed = response.data.currently.windSpeed;
+    const windDirection = this.convertWindDirection(response.data.currently.windBearing);
+    const iconName = response.data.currently.icon;
+
+    this.todayData = {
+      weekday,
+      dayNumber,
+      monthNumber,
+      yearNumber,
+      location,
+      temperature,
+      humidity,
+      windSpeed,
+      windDirection,
+      iconName
+    };
+  }
+
+  updateTodayView(todayData) {
+    this.todayData = todayData;
+
+    this.weekdayTodayElement.textContent = todayData.weekday;
+    this.dateTodayElement.textContent = `${todayData.dayNumber}-${todayData.monthNumber}-${todayData.yearNumber}`;
+    this.locationElement.textContent = todayData.location;
+    this.degreeTodayElement.firstChild.textContent = todayData.temperature;
+    this.humidityTodayElement.lastChild.textContent = " " + todayData.humidity + "%";
+    this.windTodayElement.lastChild.textContent = " " + todayData.windSpeed + "m/s";
+    this.windDirectionTodayElement.lastChild.textContent = " " + todayData.windDirection;
+    this.iconTodayElement.innerHTML = `<i class="wi wi-forecast-io-${todayData.iconName}"></i>`;
+  }
+
+  createNextDaysWeatherElements(numberOfDays, response, container) {
+    const dailyDataArr = response.data.daily.data;
+    const workingDailyDataArr = dailyDataArr.slice(1, numberOfDays + 1);
+
+    const elementsArr = workingDailyDataArr.map(current => {
+      const dateInMilliseconds = current.time * 1000;
+      const date = new Date(dateInMilliseconds);
+
+      const element = document.createElement("div");
+      element.classList.add("forecast__day");
+      element.classList.add("forecast__day-next");
+
+      const elementWeekday = document.createElement("p");
+      elementWeekday.classList.add("forecast__weekday");
+      elementWeekday.textContent = this.getStringWeekday(date);
+
+      const elementIcon = document.createElement("i");
+      elementIcon.classList.add("forecast__icon", "wi", `wi-forecast-io-${current.icon}`);
+
+      const elementDegree = document.createElement("p");
+      elementDegree.classList.add("forecast__degree");
+      elementDegree.textContent = Math.round(current.temperatureMax);
+      const elementDegreeIcon = document.createElement("i");
+      elementDegreeIcon.classList.add("wi", "wi-celsius");
+      elementDegree.insertAdjacentElement("beforeend", elementDegreeIcon);
+
+      element.append(elementWeekday, elementIcon, elementDegree);
+      return element;
+    });
+
+    this.removeElementsByClassName(container, "forecast__day-next");
+    container.append(...elementsArr);
+  }
+
+  showMoreDaysHandle() {
+    this.showMoreDaysButton.classList.toggle("modeDays--active");
+
+    if (this.showMoreDaysButton.classList.contains("modeDays--active")) {
+      this.nextDaysToShow = this.maxDaysToShow;
+      this.daysShowNumberElement.textContent = this.minDaysToShow;
+    } else {
+      this.nextDaysToShow = this.minDaysToShow;
+      this.daysShowNumberElement.textContent = this.maxDaysToShow;
+    }
+    this.createNextDaysWeatherElements(this.nextDaysToShow, this.responseData, this.forecastElement);
+  }
+
+  removeElementsByClassName(containerElement, removeChildClassName) {
+    while (containerElement.querySelectorAll(`.${removeChildClassName}`).length > 0) {
+      const element = containerElement.querySelector(`.${removeChildClassName}`);
+      containerElement.removeChild(element);
+    }
+  }
+
   updateAPI() {
-    this.API = `${this.proxyServerSettings}https://api.darksky.net/forecast/${this.APIkey}/${this.latitude},${
-      this.longitude
-    }?lang=${this.APIlang}&exclude=${this.APIexclude}&units=${this.APIunits}`;
+    this.API = `${this.proxyServerSettings}https://api.darksky.net/forecast/${this.APIkey}/${this.latitude},${this.longitude}?lang=${this.APIlang}&exclude=${this.APIexclude}&units=${this.APIunits}`;
   }
 
   convertWindDirection(direction) {
@@ -112,137 +236,8 @@ class Forecast {
     return monthNumber;
   }
 
-  updateTodayData(response) {
-    const dateInMilliseconds = response.data.currently.time * 1000;
-    const date = new Date(dateInMilliseconds);
-
-    const weekday = this.getStringWeekday(date);
-    const dayNumber = this.getDayNumber(date);
-    const monthNumber = this.getMonthNumber(date);
-    const yearNumber = date.getFullYear();
-    const location = response.data.timezone;
-    const temperature = Math.round(response.data.currently.temperature);
-    const humidity = Math.round(response.data.currently.humidity * 100);
-    const windSpeed = response.data.currently.windSpeed;
-    const windDirection = this.convertWindDirection(response.data.currently.windBearing);
-    const iconName = response.data.currently.icon;
-
-    this.todayData = {
-      weekday,
-      dayNumber,
-      monthNumber,
-      yearNumber,
-      location,
-      temperature,
-      humidity,
-      windSpeed,
-      windDirection,
-      iconName
-    };
-  }
-
-  updateTodayView(todayData) {
-    this.todayData = todayData;
-
-    this.weekdayTodayElement.textContent = todayData.weekday;
-    this.dateTodayElement.textContent = `${todayData.dayNumber}-${todayData.monthNumber}-${
-      todayData.yearNumber
-    }`;
-    this.locationElement.textContent = todayData.location;
-    this.degreeTodayElement.firstChild.textContent = todayData.temperature;
-    this.humidityTodayElement.lastChild.textContent = " " + todayData.humidity + "%";
-    this.windTodayElement.lastChild.textContent = " " + todayData.windSpeed + "m/s";
-    this.windDirectionTodayElement.lastChild.textContent = " " + todayData.windDirection;
-    this.iconTodayElement.innerHTML = `<i class="wi wi-forecast-io-${todayData.iconName}"></i>`;
-  }
-
-  createNextDaysWeatherElements(numberOfDays, response, container) {
-    const dailyDataArr = response.data.daily.data;
-    const workingDailyDataArr = dailyDataArr.slice(1, numberOfDays + 1);
-
-    const elementsArr = workingDailyDataArr.map(current => {
-      const dateInMilliseconds = current.time * 1000;
-      const date = new Date(dateInMilliseconds);
-
-      const element = document.createElement("div");
-      element.classList.add("forecast__day");
-      element.classList.add("forecast__day-next");
-
-      const elementWeekday = document.createElement("p");
-      elementWeekday.classList.add("forecast__weekday");
-      elementWeekday.textContent = this.getStringWeekday(date);
-
-      const elementIcon = document.createElement("i");
-      elementIcon.classList.add("forecast__icon", "wi", `wi-forecast-io-${current.icon}`);
-
-      const elementDegree = document.createElement("p");
-      elementDegree.classList.add("forecast__degree");
-      elementDegree.textContent = Math.round(current.temperatureMax);
-      const elementDegreeIcon = document.createElement("i");
-      elementDegreeIcon.classList.add("wi", "wi-celsius");
-      elementDegree.insertAdjacentElement("beforeend", elementDegreeIcon);
-
-      element.append(elementWeekday, elementIcon, elementDegree);
-      return element;
-    });
-
-    this.removeElementsByClassName(container, "forecast__day-next");
-    container.append(...elementsArr);
-  }
-
-  onError(error) {
-    alert(`Ошибка при определении положения: ${error.message}`);
-  }
-
-  onSuccess(position) {
-    this.latitude = position.coords.latitude;
-    this.longitude = position.coords.longitude;
-    this.updateAPI();
-
-    this.fetchWeatherData(this.API).then(response => {
-      this.responseData = response;
-      this.updateTodayData(response);
-      this.updateTodayView(this.todayData);
-      this.removeSpinner(this.forecastElement);
-      this.createNextDaysWeatherElements(this.nextDaysToShow, response, this.forecastElement);
-    });
-  }
-
   removeSpinner(container) {
     container.classList.remove("spinner");
-  }
-
-  removeElementsByClassName(containerElement, removeChildClassName) {
-    while (containerElement.querySelectorAll(`.${removeChildClassName}`).length > 0) {
-      const element = containerElement.querySelector(`.${removeChildClassName}`);
-      containerElement.removeChild(element);
-    }
-  }
-
-  showMoreDaysHandle() {
-    this.showMoreDaysButton.classList.toggle("modeDays--active");
-
-    if (this.showMoreDaysButton.classList.contains("modeDays--active")) {
-      this.nextDaysToShow = this.maxDaysToShow;
-      this.daysShowNumberElement.textContent = "7";
-    } else {
-      this.nextDaysToShow = this.minDaysToShow;
-      this.daysShowNumberElement.textContent = "4";
-    }
-    this.createNextDaysWeatherElements(this.nextDaysToShow, this.responseData, this.forecastElement);
-  }
-
-  init() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        this.onSuccess.bind(this),
-        this.onError.bind(this),
-        this.geoOptions
-      );
-      this.showMoreDaysButton.addEventListener("click", this.showMoreDaysHandle);
-    } else {
-      alert("Geolocation is not supported for this Browser/OS version yet.");
-    }
   }
 }
 
